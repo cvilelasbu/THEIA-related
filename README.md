@@ -1,5 +1,7 @@
 # THEIA-related 
 
+Make sure you have installed a reasonable version of ROOT. That is all we need!
+
 Check out these code and then run:
 
 $ g++ -std=c++11 -o main main.cc THEIALoop.cc `root-config --cflags --glibs`
