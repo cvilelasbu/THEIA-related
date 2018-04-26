@@ -2,7 +2,7 @@
 
 Check out these code and then run:
 
-$ g++ -std=c++11 -o main main.cc THEIALoop.cc root-config --cflags --glibs
+$ g++ -std=c++11 -o main main.cc THEIALoop.cc `root-config --cflags --glibs`
 
 $ ./main
 
