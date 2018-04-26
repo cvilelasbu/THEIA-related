@@ -493,16 +493,15 @@ TSpline5** THEIA::LoadDuneFlux(TString duneFlux)
    numuOsc   = (TH1D*)f1->Get("numu_fluxosc");
    numubarOsc= (TH1D*)f1->Get("numubar_fluxosc");
 
-   //normalize to 1
-   nue         ->Scale(1./nue->Integral());
-   nuebar      ->Scale(1./nuebar->Integral());
-   numu        ->Scale(1./numu->Integral());
-   numubar     ->Scale(1./numubar->Integral());
-   nueOsc      ->Scale(1./nueOsc->Integral());
-   nuebarOsc   ->Scale(1./nuebarOsc->Integral());
-   numuOsc     ->Scale(1./numuOsc->Integral());
-   numubarOsc  ->Scale(1./numubarOsc->Integral());
-
+   TH1D * hists[] = {nue, nuebar, numu, numubar, nueOsc, nuebarOsc, numuOsc, numubarOsc};
+   
+   // Divide by bin width first!
+   for (int iHist = 0; iHist < 8; iHist++) {
+     for (int iBin = 1; iBin <= hists[iHist]->GetNbinsX(); iBin++)
+       hists[iHist]->SetBinContent(iBin, hists[iHist]->GetBinContent(iBin)/hists[iHist]->GetBinWidth(iBin));
+     hists[iHist]->Scale(1./hists[iHist]->Integral()); // Why normalizing each component independently?!
+   }
+  
    TSpline5* duneNue       = new TSpline5( nue);
    TSpline5* duneNuebar    = new TSpline5( nuebar);
    TSpline5* duneNumu      = new TSpline5( numu);
@@ -528,48 +527,23 @@ TSpline5** THEIA::LoadDuneFlux(TString duneFlux)
 
 TSpline5** THEIA::LoadAtmFlux(TString atmFlux)
 {
-   double nueIn[200]={};
-   double numuIn[200]={};
-   double nuebarIn[200]={};
-   double numubarIn[200]={};
-   double totNumber[4]={};
-   double xx[200]={};
+  // Use TGraphs to read file directly, much easier
+  TGraph * gAtmNue     = new TGraph(atmFlux, "%lg %lg");
+  TGraph * gAtmNuebar  = new TGraph(atmFlux, "%lg %*lg %lg");
+  TGraph * gAtmNumu    = new TGraph(atmFlux, "%lg %*lg %*lg %lg");
+  TGraph * gAtmNumubar = new TGraph(atmFlux, "%lg %*lg %*lg %*lg %lg");
 
-   int counter = 0;
-   std::ifstream in;
-   in.open(atmFlux);
-   while (!in.eof()){
-        if (!in.good()) break;
-        in>>xx[counter]>>nueIn[counter]>>nuebarIn[counter]>>numuIn[counter]>>numubarIn[counter];
-        std::cout<<xx[counter]<<" "<<nueIn[counter]<<" "<<nuebarIn[counter]<<" "<<numuIn[counter]<<" "<<numubarIn[counter]<<std::endl;
-   counter++;
-   }
+  TSpline5* atmNue    = new TSpline5("atmNue", gAtmNue);
+  TSpline5* atmNuebar = new TSpline5("atmNuebar", gAtmNuebar);
+  TSpline5* atmNumu   = new TSpline5("atmNumu", gAtmNumu);
+  TSpline5* atmNumubar= new TSpline5("atmNumubar", gAtmNumubar);
+  
+  reTot[0] = atmNue;
+  reTot[1] = atmNuebar;
+  reTot[2] = atmNumu;
+  reTot[3] = atmNumubar;
 
-   for(Int_t i=0;i<counter;i++){
-        totNumber[0] += nueIn[counter];
-        totNumber[1] += nuebarIn[counter];
-        totNumber[2] += numuIn[counter];
-        totNumber[3] += numubarIn[counter];
-   }
-
-   for(Int_t i=0;i<counter;i++){
-	nueIn[counter]    = nueIn[counter]/totNumber[0];
-        nuebarIn[counter] = nuebarIn[counter]/totNumber[1];
-        numuIn[counter]   = numuIn[counter]/totNumber[2];
-        numubarIn[counter]= numubarIn[counter]/totNumber[3];
-   }
-
-   TSpline5* atmNue    = new TSpline5("atmNue", xx, nueIn, counter);
-   TSpline5* atmNuebar = new TSpline5("atmNuebar", xx, nuebarIn, counter);
-   TSpline5* atmNumu   = new TSpline5("atmNumu", xx, numuIn, counter);
-   TSpline5* atmNumubar= new TSpline5("atmNumubar", xx, numubarIn, counter);
-
-   reTot[0] = atmNue;
-   reTot[1] = atmNuebar;
-   reTot[2] = atmNumu;
-   reTot[3] = atmNumubar;
-
-   return reTot;
+  return reTot;
 }
 
 void THEIA::prepareOutput(TString outName){

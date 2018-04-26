@@ -38,18 +38,34 @@ int main(int argc, char* argv[])
    //sLoop->Init(tree);
    sLoop->prepareOutput("outputTest.root");
 
-   TString atmFlux("input/hondaFlux.txt");
+   TString atmFlux("input/hondaFluxTruncated.txt");
    TSpline5** atmSpline = sLoop->LoadAtmFlux(atmFlux);
 
    TString duneFlux("input/g4lbne_FHC_FD.root");
    TSpline5** duneSpline = sLoop->LoadDuneFlux(duneFlux);   
 
-   Long64_t nentries = tree->GetEntries();
 
-   std::cout<<"ready to loop"<<std::endl;
+   for (int i = 0; i < 4; i++) atmSpline[i]->SetNpx(1000);
+   for (int i = 0; i < 8; i++) duneSpline[i]->SetNpx(1000);
+   
+   
+   TCanvas * c1 = new TCanvas();
+   atmSpline[2]->Draw();
+   c1->SetLogy();
 
-   Int_t NofEvent = 100;
-   sLoop->LoopAndWrite(NofEvent, true);   
+   TCanvas * c2 = new TCanvas();
+   duneSpline[6]->Draw();
+
+   c1->SaveAs("atmSpline.png");
+   c2->SaveAs("duneSpline.png");
+   
+   
+   //   Long64_t nentries = tree->GetEntries();
+
+   //   std::cout<<"ready to loop"<<std::endl;
+
+   //   Int_t NofEvent = 100;
+   //   sLoop->LoopAndWrite(NofEvent, true);   
 
 } 
 
